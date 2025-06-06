@@ -1,0 +1,63 @@
+apiVersion: sparkoperator.k8s.io/v1beta2
+kind: SparkApplication
+metadata:
+  name: ingestapp
+spec:
+  type: Python
+  pythonVersion: "3"
+  mode: cluster
+  image: ingestapp:latest
+  imagePullPolicy: Never
+  mainApplicationFile: local:///app/ingest.py
+  sparkVersion: 3.5.3
+  restartPolicy:
+    type: Always
+  volumes:
+    - name: checkpoint
+      persistentVolumeClaim:
+        claimName: ingestapp-pvc    
+  deps:
+    packages:
+      - org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.3
+      - org.postgresql:postgresql:42.7.2
+  sparkConf:
+    spark.kubernetes.local.dirs.tmpfs: "true"
+    spark.jars.packages: |-
+      org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.3,
+      org.postgresql:postgresql:42.7.2
+    spark.jars.ivy: "/tmp/ivy"
+
+  driver:
+    coreRequest: "0.2"
+    memory: 512m
+    serviceAccount: spark
+    volumeMounts:
+      - name: checkpoint
+        mountPath: /mnt/checkpoint
+    env:
+      - name: KAFKA_BROKER
+        value: "my-cluster-kafka-bootstrap:9092"
+      - name: KAFKA_TOPIC
+        value: "ok-topic"   
+      - name: CHECKPOINT_LOCATION
+        value: "/mnt/checkpoint"
+    envSecretKeyRefs:
+      POSTGRES_URL:
+        name: demo-db-app
+        key: jdbc-uri
+      POSTGRES_USER:
+        name: demo-db-app
+        key: username
+      POSTGRES_PASSWORD:
+        name: demo-db-app
+        key: password
+      AWS_ACCESS_KEY_ID:
+        name: minio-credentials
+        key: access-key
+      AWS_SECRET_ACCESS_KEY:
+        name: minio-credentials
+        key: secret-key
+  executor:
+    instances: 1
+    coreRequest: "0.2"
+    memory: 512m

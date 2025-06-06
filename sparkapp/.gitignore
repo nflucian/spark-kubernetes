@@ -1,0 +1,40 @@
+# Build artifacts
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+.vscode/
+
+# Dependency caches
+.gradle/
+.m2/
+.ivy2/
+.coursier/
+build/
+
+# Log files
+*.log
+logs/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# VSCode config
+.vscode/
+.metals/
+.bloop/
+
+# Kubernetes / Local config (optional, adjust as needed)
+#secrets.yaml
+#local-config.yaml 

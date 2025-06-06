@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: spark-job-app
+  namespace: default
+spec:
+  backoffLimit: 2  # în caz de eșec, va încerca de 2 ori
+  template:
+    spec:
+      serviceAccount: spark
+      restartPolicy: Never
+      containers:
+        - name: spark-job-app
+          image: "sparkapp:latest"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: access-key
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: secret-key
+          command: ["/opt/spark/bin/spark-submit"]
+          args:
+            [
+              "--master", "k8s://https://kubernetes.default.svc:443",
+              "--deploy-mode", "cluster",
+              "--name", "spark-job-app",
+              "--class", "com.example.DeltaMinioApp",
+              "--conf", "spark.executor.instances=2",
+              "--conf", "spark.executor.memory=512m",
+              "--conf", "spark.executor.cores=1",
+              "--conf", "spark.driver.memory=512m",
+              "--conf", "spark.kubernetes.namespace=default",
+              "--conf", "spark.kubernetes.authenticate.driver.serviceAccountName=spark",
+              "--conf", "spark.kubernetes.container.image=sparkapp:latest",
+              "--conf", "spark.app.s3.table.path=s3a://datalake/dummy/jobclient",
+              "--conf", "spark.hadoop.fs.s3a.endpoint=http://192.168.68.103:9000",
+              "local:///opt/spark/apps/sparkapp.jar"
+            ]

@@ -1,0 +1,45 @@
+apiVersion: sparkoperator.k8s.io/v1beta2
+kind: SparkApplication
+metadata:
+  name: fake-data-generator
+  namespace: default
+spec:
+  type: Python
+  mode: cluster
+  image: fake-events:latest
+  imagePullPolicy: Never # TODO: change to Always
+  mainApplicationFile: local:///app/fake_data.py
+  sparkVersion: "3.5.0"
+  restartPolicy:
+    type: Never
+  pythonVersion: "3"
+  volumes:
+    - name: checkpoint
+      persistentVolumeClaim:
+        claimName: checkpoint-pvc
+  deps:
+    packages:
+      - org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0 
+  sparkConf:
+    spark.jars.packages: "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0"
+    spark.jars.ivy: "/tmp/ivy"
+  driver:
+    cores: 1
+    memory: "1g"
+    serviceAccount: spark
+    labels:
+      version: "3.5.0"
+    env:
+      - name: KAFKA_BROKER
+        value: "my-cluster-kafka-bootstrap:9092"
+      - name: KAFKA_TOPIC
+        value: "ok-topic"
+      - name: CHECKPOINT_LOCATION
+        value: "/mnt/checkpoint"
+    volumeMounts:
+      - name: checkpoint
+        mountPath: /mnt/checkpoint
+  executor:
+    cores: 1
+    instances: 1
+    memory: "1g"

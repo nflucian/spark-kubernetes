@@ -1,0 +1,12 @@
+rootUser: AAAAAAAAAAAAAAAAAAAAA
+rootPassword: BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+replicas: 1
+mode: standalone
+resources:
+  requests:
+    memory: 512Mi
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  hosts:
+    - minio.k8s

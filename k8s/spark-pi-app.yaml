@@ -1,0 +1,32 @@
+apiVersion: "sparkoperator.k8s.io/v1beta2"
+kind: SparkApplication
+metadata:
+  name: "spark-pi-app"
+  namespace: default
+spec:
+  type: Scala
+  mode: cluster
+  sparkVersion: "3.5.0"
+  image: "apache/spark:3.5.0"
+  restartPolicy:
+    type: Never
+  mainClass: org.apache.spark.examples.SparkPi
+  mainApplicationFile: "local:///opt/spark/examples/jars/spark-examples_2.12-3.5.0.jar"
+  arguments:
+    - "1000"
+  sparkConf:
+    spark.eventLog.enabled: "false"
+  driver:
+    cores: 1
+    coreLimit: "1200m"
+    memory: "1g"
+    serviceAccount: spark
+    labels:
+      version: 3.5.3
+  executor:
+    cores: 1
+    instances: 2
+    memory: "1g"
+    serviceAccount: spark
+    labels:
+      version: 3.5.3
